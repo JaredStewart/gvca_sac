@@ -1,0 +1,90 @@
+[
+    {
+      "category": "Academic & Curriculum Concerns",
+      "tags": [
+        {"tag": "Curriculum Changes", "explanation": "Concerns about modifications to the curriculum"},
+        {"tag": "Math Curriculum", "explanation": "Feedback on the effectiveness of the math program"},
+        {"tag": "Diversity of Curriculum", "explanation": "Requests for a broader range of subjects and electives"},
+        {"tag": "Classroom Environment", "explanation": "Observations on learning space, classroom management, and peer dynamics"},
+        {"tag": "Academic Rigor", "explanation": "Concerns and praises regarding the challenge level of coursework"},
+        {"tag": "Personalized Learning", "explanation": "Feedback on how well the school accommodates individual student needs"},
+        {"tag": "Support for Advanced Students", "explanation": "Availability of resources for gifted or high-achieving students"},
+        {"tag": "Teacher Expectations", "explanation": "Feedback on student accountability and workload expectations"}
+      ]
+    },
+    {
+      "category": "Assessment & Grading Policies",
+      "tags": [
+        {"tag": "Grading System", "explanation": "Concerns about grading policies (e.g., fairness, GPA calculations)"},
+        {"tag": "5.0 GPA System", "explanation": "Specific feedback on the impact of the weighted grading system"},
+        {"tag": "Peer Grading", "explanation": "Concerns about the fairness and effectiveness of peer grading practices"}
+      ]
+    },
+    {
+      "category": "Homework & Workload",
+      "tags": [
+        {"tag": "Homework Load", "explanation": "Feedback on the volume and difficulty of homework"},
+        {"tag": "Teacher Communication", "explanation": "Clarity of teacher expectations and feedback on student progress"}
+      ]
+    },
+    {
+      "category": "Student Support & Well-being",
+      "tags": [
+        {"tag": "Support Services", "explanation": "Availability of services for students with special needs"},
+        {"tag": "Dyslexia & Learning Differences Support", "explanation": "Specific concerns regarding accommodations for dyslexic students"},
+        {"tag": "Student Anxiety & Mental Health", "explanation": "Concerns about stress, workload, and emotional well-being"}
+      ]
+    },
+    {
+      "category": "School Policies & Operations",
+      "tags": [
+        {"tag": "Uniform Policy", "explanation": "Feedback on dress code enforcement and expectations"},
+        {"tag": "Discipline Policies", "explanation": "Effectiveness and fairness of disciplinary measures"},
+        {"tag": "School Schedule", "explanation": "Suitability and structure of the academic calendar and daily schedule"},
+        {"tag": "Technology Policies", "explanation": "Feedback on the use of devices in learning"}
+      ]
+    },
+    {
+      "category": "Extracurricular & Enrichment Opportunities",
+      "tags": [
+        {"tag": "Extracurricular Activities", "explanation": "Availability of clubs, sports, and after-school programs"},
+        {"tag": "Electives", "explanation": "Feedback on the variety and quality of elective courses"},
+        {"tag": "After-School Programs", "explanation": "Requests for additional structured activities beyond the school day"},
+        {"tag": "College Preparation", "explanation": "Feedback on resources for high school students preparing for college"},
+        {"tag": "Character & Virtue Development", "explanation": "How well the school fosters moral and ethical education"}
+      ]
+    },
+    {
+      "category": "School Communication & Engagement",
+      "tags": [
+        {"tag": "Parent Involvement", "explanation": "Opportunities for parents to engage in school life"},
+        {"tag": "Communication Improvements", "explanation": "Clarity and timeliness of school updates"},
+        {"tag": "Transparency in Assignments", "explanation": "The need for clearer communication about homework and deadlines"},
+        {"tag": "Promotion of School Events", "explanation": "Suggestions for better publicizing school functions"},
+        {"tag": "Parent Mixers & Community Building", "explanation": "Interest in fostering stronger connections among families"}
+      ]
+    },
+    {
+      "category": "Safety & Infrastructure",
+      "tags": [
+        {"tag": "School Safety Concerns", "explanation": "Feedback on safety measures and student well-being"},
+        {"tag": "Facilities Improvement", "explanation": "Suggestions for enhancing the school's physical environment"},
+        {"tag": "Safety in Carline", "explanation": "Concerns about traffic, drop-off, and pick-up safety procedures"}
+      ]
+    },
+    {
+      "category": "Retention & Social Integration",
+      "tags": [
+        {"tag": "Student Retention Issues", "explanation": "Concerns about students leaving the school at different stages"},
+        {"tag": "Social Integration", "explanation": "Opportunities for students to connect and build friendships across grades"}
+      ]
+    },
+    {
+      "category": "Cafeteria & Miscellaneous Concerns",
+      "tags": [
+        {"tag": "Cafeteria Services", "explanation": "Feedback on food quality and meal options"},
+        {"tag": "Theft Concerns", "explanation": "Issues related to student belongings being taken or misplaced"}
+      ]
+    }
+  ]
+  
