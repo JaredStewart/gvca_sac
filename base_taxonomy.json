@@ -1,0 +1,51 @@
+[
+    {
+      "tag": "Concern",
+      "explanation": "Feedback highlighting issues, challenges, or areas for improvement within the school."
+    },
+    {
+      "tag": "Curriculum",
+      "explanation": "Feedback on the structure, content, and effectiveness of the school's academic programs, including subject offerings and instructional approaches."
+    },
+    {
+      "tag": "Good Outcomes",
+      "explanation": "Positive feedback on successful experiences, achievements, or effective practices within the school community."
+    },
+    {
+      "tag": "Policies & Administration",
+      "explanation": "Feedback on the school's policies, administrative decisions, and overall governance, including rules, regulations, and operational procedures."
+    },
+    {
+      "tag": "Teachers",
+      "explanation": "Comments on teacher effectiveness, communication, expectations, and overall impact on student learning and development."
+    },
+    {
+      "tag": "Culture & Virtues",
+      "explanation": "Observations on the school’s values, moral education, student behavior, and how the institution fosters character development and a positive school culture."
+    },
+    {
+      "tag": "Wellbeing",
+      "explanation": "Feedback on student mental health, emotional well-being, stress levels, academic pressure, and overall support systems available."
+    },
+    {
+      "tag": "Communication",
+      "explanation": "Comments on the clarity, frequency, and effectiveness of communication between the school, teachers, students, and parents."
+    },
+    {
+      "tag": "Community",
+      "explanation": "Feedback on the sense of belonging, parent involvement, relationships among students, and efforts to build a strong school community."
+    },
+    {
+      "tag": "Extra-curriculars & Sports",
+      "explanation": "Feedback on the availability, quality, and impact of extracurricular activities, including clubs, arts, and athletics."
+    },
+    {
+      "tag": "Facilities",
+      "explanation": "Observations on the school’s physical infrastructure, cleanliness, classroom resources, and overall campus environment."
+    },
+    {
+      "tag": "Other",
+      "explanation": "General feedback that does not fit into a specific category but is still relevant to the school experience."
+    }
+  ]
+  
