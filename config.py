@@ -23,21 +23,20 @@ concluding_headers = [
 ]
 
 
-
 levels = [
     "Grammar",
     "Middle",
-    "Upper",
+    "High",
 ]
 
 level_sequences = [
-    ['Grammar'],
-    ['Grammar', 'Middle'],
-    ['Grammar', 'Upper'],
-    ['Grammar', 'Middle', 'Upper'],
-    ['Middle'],
-    ['Middle', 'Upper'],
-    ['Upper'],
+    ["Grammar"],
+    ["Grammar", "Middle"],
+    ["Grammar", "High"],
+    ["Grammar", "Middle", "High"],
+    ["Middle"],
+    ["Middle", "High"],
+    ["High"],
 ]
 
 questions_for_each_school_level = [
@@ -62,10 +61,30 @@ has_generic_response = [
     "Please provide us with examples of how GVCA can better serve you and your family.",
 ]
 
-levels_of_satisfaction = ["Extremely Satisfied", "Satisfied", "Somewhat Satisfied", "Not Satisfied"]
-levels_of_reflection = ["Strongly Reflected", "Reflected", "Somewhat Reflected", "Not Reflected"]
-levels_of_effectiveness = ["Extremely Effective", "Effective", "Somewhat Effective", "Not Effective"]
-levels_of_welcoming = ["Extremely Welcoming", "Welcoming", "Somewhat Welcoming", "Not Welcoming"]
+levels_of_satisfaction = [
+    "Extremely Satisfied",
+    "Satisfied",
+    "Somewhat Satisfied",
+    "Not Satisfied",
+]
+levels_of_reflection = [
+    "Strongly Reflected",
+    "Reflected",
+    "Somewhat Reflected",
+    "Not Reflected",
+]
+levels_of_effectiveness = [
+    "Extremely Effective",
+    "Effective",
+    "Somewhat Effective",
+    "Not Effective",
+]
+levels_of_welcoming = [
+    "Extremely Welcoming",
+    "Welcoming",
+    "Somewhat Welcoming",
+    "Not Welcoming",
+]
 question_responses = {
     questions_for_each_school_level[0]: levels_of_satisfaction,
     questions_for_each_school_level[1]: levels_of_satisfaction,
@@ -76,10 +95,31 @@ question_responses = {
     questions_for_each_school_level[6]: levels_of_welcoming,
 }
 
+taxonomy_tags = [
+    "Needs a Voice",
+    "Concern",
+    "All Around Support",
+    "Curriculum",
+    "Good Outcomes",
+    "Policies/ Administration",
+    "Teachers",
+    "Culture/ Virtues",
+    "Communication",
+    "Community",
+    "Extra-curriculars/ Sports",
+    "Facilities",
+    "No Improvement Listed",
+]
+
+taxonomy_string = ""
+with open("taxonomy.md", "r") as f:
+    taxonomy_string = f.read()
+
+
 def make_input_headers():
     input_headers = initial_headers.copy()
     for level_sequence in level_sequences:
-        for question in questions_for_each_school_level:    
+        for question in questions_for_each_school_level:
             for level in level_sequence:
                 header = f"({level}) {question}"
                 input_headers.append(header)
@@ -90,12 +130,18 @@ def make_input_headers():
     logger.debug(input_headers)
     return input_headers
 
+
 input_headers = make_input_headers()
 
+
 def to_parent_count(output_row, index_map):
-    if output_row[index_map["Submission Method"]] == "All parents and guardians will coordinate responses, and we will submit only one survey.":
+    if (
+        output_row[index_map["Submission Method"]]
+        == "All parents and guardians will coordinate responses, and we will submit only one survey."
+    ):
         return 2
     return 1
+
 
 def to_response_empty(output_row, index_map):
     for question in questions_for_each_school_level:
@@ -108,6 +154,7 @@ def to_response_empty(output_row, index_map):
             if output_row[index_map[header]] != "-":
                 return False
     return True
+
 
 def to_combined_free_response(output_row, index_map):
     responses = []
@@ -130,11 +177,12 @@ def to_combined_free_response(output_row, index_map):
         return "-"
     return "\n".join(responses)
 
+
 additional_fields = {
     "N Parents Represented": to_parent_count,
     "Empty Response": to_response_empty,
-    "Total Free Response": to_combined_free_response,
 }
+
 
 def make_output_metadata():
     index_map = {}
@@ -143,7 +191,7 @@ def make_output_metadata():
     for header in initial_headers:
         index_map[header] = len(output_headers)
         output_headers.append(header)
-    
+
     for header in additional_fields:
         index_map[header] = len(output_headers)
         output_headers.append(header)
@@ -167,7 +215,8 @@ def make_output_metadata():
     logger.debug(output_headers)
     for key in mapped_indexes:
         logger.debug(key, index_map[key])
-    
+
     return index_map, output_headers
+
 
 index_map, output_headers = make_output_metadata()
