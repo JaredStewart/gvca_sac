@@ -95,7 +95,7 @@ def make_tagged_free_response_data(flattened_row):
                 # Create one column per taxonomy tag.
                 # If the tag is present in kept_tags, put "yes", otherwise leave empty.
                 tag_columns = []
-                for tag in config.taxonomy:
+                for tag in config.taxonomy_tags:
                     tag_columns.append("yes" if tag in kept_tags else "")
 
                 row_data.extend(tag_columns)
@@ -112,7 +112,7 @@ def make_tagged_free_response_data(flattened_row):
 
                 kept_tags, requests = process_free_response(response_text)
                 tag_columns = []
-                for tag in config.taxonomy:
+                for tag in config.taxonomy_tags:
                     tag_columns.append("yes" if tag in kept_tags else "")
 
                 row_data.extend(tag_columns)
@@ -149,9 +149,9 @@ def transform_raw(filename):
                 continue
             flattened_row = make_output_row(row)
             flattened_data.append(flattened_row)
-            free_response_data.extend(make_tagged_free_response_data(flattened_row))
+            # free_response_data.extend(make_tagged_free_response_data(flattened_row))
 
-    return flattened_data, free_response_data
+    return flattened_data #, free_response_data
 
 
 def compute_averages_and_weighted_totals(df, weight_by_parents=False):
@@ -297,9 +297,9 @@ def write_free_response_file(filename, free_response_data):
 
 def raw_to_processed(year: str):
     base_file = f"{year}.csv"
-    flattened_data, free_response_data = transform_raw(os.path.join("data", base_file))
+    flattened_data = transform_raw(os.path.join("data", base_file))
     write_flattened_file(os.path.join("processed", base_file), flattened_data)
-    write_free_response_file(os.path.join("processed", f"free_response_{base_file}"), free_response_data)
+    # write_free_response_file(os.path.join("processed", f"free_response_{base_file}"), free_response_data)
 
 
 def load_flattened(year: str):
@@ -470,6 +470,7 @@ def create_stacked_bar_chart(
     proportions: dict,
     data_keys: list = None,
     savefig: bool = False,
+    save_csv: bool = False,
     subfolder="artifacts",
 ) -> None:
     """
@@ -535,6 +536,15 @@ def create_stacked_bar_chart(
             bbox_inches="tight",
             pad_inches=0.5,
         )
+    if save_csv:
+        # Build a DataFrame from the proportions dictionary.
+        # We assume that each value in proportions is in the order: [Very, Satisfied, Somewhat, Not].
+        df_csv = pd.DataFrame.from_dict(proportions, orient="index", 
+                                        columns=["Very", "Satisfied", "Somewhat", "Not"])
+        # Save the DataFrame to CSV.
+        if not os.path.exists(subfolder):
+            os.mkdir(subfolder)
+        df_csv.to_csv(f"{subfolder}/{filename}.csv", index_label="Question")
     return plt
 
 
@@ -564,7 +574,7 @@ def to_proportions_and_labels(df, col):
     return proportions, labels
 
 
-def plot_sequence(year, grouping, df_, savefig=False):
+def plot_sequence(year, grouping, df_, savefig=False, save_csv=False):
     splits = [
         ("All Responses", "N_total"),
         ("Grammar Responses", "N_Grammar"),
@@ -583,6 +593,7 @@ def plot_sequence(year, grouping, df_, savefig=False):
             x_data_labels=labels,
             proportions=proportions,
             savefig=savefig,
+            save_csv=
         )
 
 
