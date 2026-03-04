@@ -1,0 +1,61 @@
+[project]
+name = "gvca-sac-backend"
+version = "0.1.0"
+description = "GVCA SAC Survey Analysis Backend API"
+requires-python = ">=3.13"
+dependencies = [
+    # Web framework
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+
+    # Data processing
+    "polars",
+    "numpy",
+
+    # Visualization
+    "plotly",
+    "matplotlib",
+
+    # ML/NLP
+    "umap-learn>=0.5.7",
+    "hdbscan",
+    "numba>=0.60.0",
+    "llvmlite>=0.43.0",
+    "pynndescent>=0.5.13",
+
+    # AI
+    "openai>=1.0.0",
+    "tenacity>=8.0.0",
+
+    # Data validation
+    "pydantic",
+    "pydantic-settings",
+
+    # Utilities
+    "python-dotenv",
+    "httpx",
+    "websockets",
+    "jinja2",
+
+    # CLI
+    "typer",
+    "rich",
+]
+
+[project.scripts]
+gvca = "app.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

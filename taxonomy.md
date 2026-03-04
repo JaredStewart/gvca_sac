@@ -32,11 +32,16 @@ Positive feedback on successful experiences, achievements, or effective practice
 - Student retention  
 - Post-grad preparedness  
 
-### Policies & Administration  
+### All Around Support
+General positive feedback showing broad support for the school without specific categorization. Use ONLY if feedback is broad/unspecific praise (e.g., "I love everything about GVCA"). Or more than three positives.
+
+### Policies/ Administration  
 Feedback on the school's policies, administrative decisions, and overall governance, including rules, regulations, and operational procedures.  
 
 **Keywords:**  
 - Administration/staff  
+- Rules
+- Cell Phones
 - Structure  
 - Discipline  
 - Safety and security  
@@ -62,14 +67,14 @@ Comments on teacher effectiveness, communication, expectations, and overall impa
 - Teacher retention  
 - Faculty  
 
-### Culture & Virtues  
-Observations on the school’s values, moral education, student behavior, and how the institution fosters character development and a positive school culture.  
+### Culture/ Virtues  
+Observations on the school's values, moral education, student behavior, and how the institution fosters character development and a positive school culture. Notably includes any commentary on the house system.
 
 **Keywords:**  
 - School culture  
 - School environment/community (students)  
 - Congruence with virtues  
-- Behaviors  
+- Behaviors (esp. Classroom Behavior)
 - High standards  
 - Board  
 - Strategic direction  
@@ -79,9 +84,9 @@ Observations on the school’s values, moral education, student behavior, and ho
 - Well-rounded child  
 - Friendships  
 - Integrity  
-
-### Wellbeing  
-Feedback on student mental health, emotional well-being, stress levels, academic pressure, and overall support systems available.
+- Moral Compass
+- Disrespect
+- Bullying
 
 ### Communication  
 Comments on the clarity, frequency, and effectiveness of communication between the school, teachers, students, and parents.  
@@ -90,6 +95,7 @@ Comments on the clarity, frequency, and effectiveness of communication between t
 - Managing perception  
 - Managing expectations  
 - Purposeful communication  
+- Responding / Response
 
 ### Community  
 Feedback on the sense of belonging, parent involvement, relationships among students, and efforts to build a strong school community.  
@@ -103,34 +109,36 @@ Feedback on the sense of belonging, parent involvement, relationships among stud
 - Volunteer opportunities  
 - Facebook page  
 
-### Extra-curriculars & Sports  
-Feedback on the availability, quality, and impact of extracurricular activities, including clubs, arts, and athletics.  
+### Extra-curriculars/ Sports  
+Feedback on the availability, quality, and impact of extracurricular activities, including clubs and athletics.  
 
 **Keywords:**  
 - Clubs  
 - Athletics  
 - Before/after school care  
-- Field trips  
+- Field trips 
+- Fun
+- Recreation
+- Life Skills
+- Money Management
 
 ### Facilities  
-Observations on the school’s physical infrastructure, cleanliness, classroom resources, and overall campus environment.  
+Observations on the school’s physical infrastructure, cleanliness, classroom resources, and overall campus environment especially including car line, class size, small school.
 
 **Keywords:**  
 - School size  
 - Class size  
 - Location  
 - Playground  
-- Carline  
+- Carline (also Car Line)
+- Cars
+- Drop Off
+- Pick Up
+- Cones
 - Transportation  
 - Repairs  
 
-### Needs a Voice  
-Feedback that should be elevated to the final report due to its significance, urgency, or unique insight.  
-- Should be applied to **fewer than 5%** of responses.  
-- The AI assistant should only tag responses that **clearly warrant special attention** due to their impact or critical nature.  
 
-### No Improvement Listed  
+
+### No improvement listed  
 Responses that do not indicate a specific issue or area for improvement.
-
-### Other  
-General feedback that does not fit into a specific category but is still relevant to the school experience.

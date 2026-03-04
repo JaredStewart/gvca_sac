@@ -1,0 +1,23 @@
+[project]
+name = "gvca-sac"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "hdbscan>=0.8.40",
+    "ipykernel>=7.1.0",
+    "jinja2>=3.1.6",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.4",
+    "openai>=2.7.2",
+    "pandas>=2.3.3",
+    "plotly>=6.4.0",
+    "polars>=1.35.2",
+    "pydantic>=2.12.4",
+    "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
+    "sentence-transformers>=5.1.2",
+    "umap-learn>=0.5.9.post2",
+]

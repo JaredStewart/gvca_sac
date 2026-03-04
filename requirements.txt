@@ -1,5 +1,0 @@
-matplotlib
-openai
-pandas
-pydantic
-python-dotenv 
