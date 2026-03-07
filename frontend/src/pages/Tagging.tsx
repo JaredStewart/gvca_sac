@@ -17,7 +17,7 @@ export default function Tagging() {
   // Start batch tagging mutation
   const batchMutation = useMutation({
     mutationFn: (retagExisting: boolean) =>
-      taggingApi.startBatch(selectedYear!, retagExisting),
+      taggingApi.startBatch(selectedYear!, { retag_existing: retagExisting }),
   })
 
   // Tag toggle mutation for table view with optimistic updates (US2)

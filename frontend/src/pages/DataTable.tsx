@@ -97,7 +97,7 @@ export default function DataTable() {
   })
 
   // Filter state
-  const [filters, setFilters] = useState<{
+  const [filters] = useState<{
     level?: string
     is_minority?: boolean
     has_support?: boolean

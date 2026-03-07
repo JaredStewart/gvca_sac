@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { X, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import { useAppStore } from '@/stores/app'
-import { jobsApi, subscribeToJob, type Job } from '@/api/client'
+import { jobsApi, subscribeToJob } from '@/api/client'
 
 interface JobProgressProps {
   jobId: string
@@ -13,7 +13,7 @@ interface JobProgressProps {
 }
 
 export default function JobProgress({ jobId, onComplete }: JobProgressProps) {
-  const { activeJobs, updateJob, removeJob } = useAppStore()
+  const { activeJobs, updateJob } = useAppStore()
   const job = activeJobs.find((j) => j.id === jobId)
 
   useEffect(() => {

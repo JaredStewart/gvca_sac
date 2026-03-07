@@ -210,7 +210,7 @@ export default function ClusterScatterPlot({
       })
 
     if (!isLassoMode) {
-      svg.call(zoom)
+      svg.call(zoom as unknown as (selection: d3.Selection<SVGSVGElement | null, unknown, null, undefined>) => void)
     }
 
     // Lasso drag behavior
@@ -257,7 +257,7 @@ export default function ClusterScatterPlot({
       })
 
     if (isLassoMode) {
-      svg.call(lassoDrag as unknown as d3.DragBehavior<SVGSVGElement, unknown, unknown>)
+      svg.call(lassoDrag as unknown as (selection: d3.Selection<SVGSVGElement | null, unknown, null, undefined>) => void)
     }
 
     // Click handler for individual points

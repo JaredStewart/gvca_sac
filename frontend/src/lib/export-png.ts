@@ -1,19 +1,27 @@
 import { toPng } from 'html-to-image'
 
-const EXPORT_WIDTH = 1200
-const EXPORT_HEIGHT = 900
+export interface ExportPngOptions {
+  width?: number
+  height?: number
+  padding?: number
+}
 
 export async function exportNodeToPng(
   node: HTMLElement,
-  filename: string
+  filename: string,
+  options?: ExportPngOptions
 ): Promise<void> {
+  const padding = options?.padding ?? 24
+  const width = options?.width ?? node.scrollWidth + padding * 2
+  const height = options?.height ?? node.scrollHeight + padding * 2
+
   const dataUrl = await toPng(node, {
-    width: EXPORT_WIDTH,
-    height: EXPORT_HEIGHT,
+    width,
+    height,
     style: {
-      width: `${EXPORT_WIDTH}px`,
-      height: `${EXPORT_HEIGHT}px`,
-      padding: '24px',
+      width: `${width}px`,
+      height: `${height}px`,
+      padding: `${padding}px`,
       boxSizing: 'border-box',
       background: 'white',
     },

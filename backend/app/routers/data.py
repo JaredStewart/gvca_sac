@@ -199,6 +199,67 @@ async def get_free_responses(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@router.get("/{year}/free-response-counts")
+async def get_free_response_counts(year: str):
+    """
+    Get counts of Good Choice vs Better Serve respondents.
+
+    Returns total counts, only-positive counts, and overlap.
+    Groups by survey_response_id to count unique respondents.
+    """
+    validate_year(year)
+
+    try:
+        all_responses = await pb_client.get_full_list(
+            "free_responses",
+            filter_str=f'year = "{year}"',
+        )
+
+        # Group by survey_response_id to find which respondents gave which types
+        respondent_types: dict[str, set[str]] = {}
+        for r in all_responses:
+            sid = r.get("survey_response_id") or r.get("response_id", "")
+            qt = r.get("question_type", "")
+            if sid not in respondent_types:
+                respondent_types[sid] = set()
+            respondent_types[sid].add(qt)
+
+        total_gc = 0
+        total_bs = 0
+        only_gc = 0
+        only_bs = 0
+        both = 0
+
+        for types in respondent_types.values():
+            has_praise = "praise" in types
+            has_improvement = "improvement" in types
+            if has_praise:
+                total_gc += 1
+            if has_improvement:
+                total_bs += 1
+            if has_praise and has_improvement:
+                both += 1
+            elif has_praise:
+                only_gc += 1
+            elif has_improvement:
+                only_bs += 1
+
+        total_respondents = len(respondent_types)
+        only_positive_pct = round(only_gc / total_respondents * 100, 1) if total_respondents > 0 else 0
+
+        return {
+            "total_good_choice": total_gc,
+            "total_better_serve": total_bs,
+            "only_good_choice": only_gc,
+            "only_better_serve": only_bs,
+            "both": both,
+            "only_positive_pct": only_positive_pct,
+        }
+    except Exception as e:
+        logger.error("Error computing free response counts: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/{year}/free-responses-with-tags", response_model=TaggableResponsePage)
 async def get_free_responses_with_tags(
     year: str,

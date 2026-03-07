@@ -125,6 +125,17 @@ export const dataApi = {
     window.URL.revokeObjectURL(url)
   },
 
+  // Get free response counts (Good Choice vs Better Serve)
+  getFreeResponseCounts: (year: string) =>
+    request<{
+      total_good_choice: number
+      total_better_serve: number
+      only_good_choice: number
+      only_better_serve: number
+      both: number
+      only_positive_pct: number
+    }>(`/api/data/${year}/free-response-counts`),
+
   // Get survey responses from database with filters
   getDbResponses: (year: string, params?: {
     page?: number
@@ -728,6 +739,17 @@ export const chartsApi = {
       total: number
       charts: Array<{ filename: string; size: number; url: string }>
     }>('/api/charts/compare/list'),
+
+  exportAll: (year: string, years?: string[]) =>
+    request<{
+      year: string
+      status: string
+      charts_generated: number
+      files: string[]
+    }>(`/api/charts/${year}/export-all`, {
+      method: 'POST',
+      body: { years },
+    }),
 
   // New board presentation chart endpoints
   demographicComparison: (year: string, data: DemographicComparisonRequest) =>

@@ -31,6 +31,10 @@ class CompareChartRequest(BaseModel):
     years: list[str]
 
 
+class ExportAllRequest(BaseModel):
+    years: list[str] | None = None
+
+
 @router.post("/{year}/generate-all")
 async def generate_all_charts(year: str, request: ChartGenerateRequest):
     """
@@ -179,6 +183,166 @@ async def list_comparison_charts():
     return {
         "total": len(charts),
         "charts": sorted(charts, key=lambda x: x["filename"]),
+    }
+
+
+@router.post("/{year}/export-all")
+async def export_all_charts(year: str, request: ExportAllRequest):
+    """
+    Generate all charts and CSVs to the artifacts directory.
+
+    Produces PNGs and CSVs for:
+    - Per-question subgroup and YoY charts
+    - Overall composite satisfaction scores
+    - Tag frequency chart
+    - Good Choice / Better Serve difference chart
+    - Tag response trend chart (if multiple years available)
+    """
+    from app.core.charts import (
+        generate_all_charts,
+        generate_comparison_charts,
+        generate_composite_satisfaction_chart,
+        generate_good_choice_better_serve_chart,
+        generate_tag_trend_chart,
+        generate_all_csvs,
+    )
+
+    pipeline = await pipeline_manager.ensure_loaded(year)
+
+    # Determine years for multi-year charts
+    all_years = request.years
+    if not all_years:
+        # Auto-detect available years
+        from app.services.pipeline_manager import pipeline_manager as pm
+        all_years = list(pm.pipelines.keys())
+        if year not in all_years:
+            all_years.append(year)
+        all_years.sort()
+
+    generated: list[str] = []
+
+    # 1. Per-question charts + satisfaction summary (existing)
+    try:
+        # Get tag distributions
+        results = await pb_client.get_full_list(
+            "tagging_results", filter_str=f'year = "{year}"'
+        )
+        good_choice_tags: dict[str, int] = {}
+        better_serve_tags: dict[str, int] = {}
+        for result in results:
+            question = result.get("question", "")
+            tags = result.get("llm_tags", [])
+            if "good choice" in question.lower():
+                for tag in tags:
+                    good_choice_tags[tag] = good_choice_tags.get(tag, 0) + 1
+            elif "better serve" in question.lower():
+                for tag in tags:
+                    better_serve_tags[tag] = better_serve_tags.get(tag, 0) + 1
+
+        tag_distribution = {
+            "good_choice": good_choice_tags,
+            "better_serve": better_serve_tags,
+        }
+
+        files = await generate_all_charts(year, pipeline.data, tag_distribution)
+        generated.extend(files)
+    except Exception as e:
+        logger.error("Error generating per-year charts: %s", e)
+
+    # 2. Multi-year comparison charts
+    if len(all_years) >= 2:
+        try:
+            years_data = {}
+            for y in all_years:
+                p = await pipeline_manager.ensure_loaded(y)
+                years_data[y] = p.data
+            files = await generate_comparison_charts(years_data)
+            generated.extend(files)
+        except Exception as e:
+            logger.error("Error generating comparison charts: %s", e)
+
+    # 3. Composite satisfaction scores (new)
+    if len(all_years) >= 1:
+        try:
+            years_data = {}
+            for y in all_years:
+                p = await pipeline_manager.ensure_loaded(y)
+                years_data[y] = p.data
+
+            settings = get_settings()
+            output_dir = settings.artifacts_dir / year
+            files = generate_composite_satisfaction_chart(years_data, output_dir)
+            generated.extend(files)
+        except Exception as e:
+            logger.error("Error generating composite chart: %s", e)
+
+    # 4. Good Choice / Better Serve difference (new)
+    try:
+        free_responses = await pb_client.get_full_list(
+            "free_responses", filter_str=f'year = "{year}"'
+        )
+        settings = get_settings()
+        output_dir = settings.artifacts_dir / year
+        files = generate_good_choice_better_serve_chart(free_responses, year, output_dir)
+        generated.extend(files)
+    except Exception as e:
+        logger.error("Error generating good choice/better serve chart: %s", e)
+
+    # 5. Tag trend chart (new, multi-year)
+    if len(all_years) >= 2:
+        try:
+            years_tag_data: dict[str, dict] = {}
+            for y in all_years:
+                y_results = await pb_client.get_full_list(
+                    "tagging_results", filter_str=f'year = "{y}"'
+                )
+                y_free = await pb_client.get_full_list(
+                    "free_responses", filter_str=f'year = "{y}"'
+                )
+                # Build question_type lookup
+                resp_type = {}
+                for fr in y_free:
+                    resp_type[fr["response_id"]] = fr.get("question_type", "improvement")
+
+                gc_tags: dict[str, int] = {}
+                bs_tags: dict[str, int] = {}
+                for tr in y_results:
+                    rid = tr.get("response_id")
+                    qt = resp_type.get(rid, "improvement")
+                    for tag in tr.get("llm_tags", []):
+                        if qt == "praise":
+                            gc_tags[tag] = gc_tags.get(tag, 0) + 1
+                        else:
+                            bs_tags[tag] = bs_tags.get(tag, 0) + 1
+
+                years_tag_data[y] = {"good_choice": gc_tags, "better_serve": bs_tags}
+
+            settings = get_settings()
+            output_dir = settings.artifacts_dir / year
+            files = generate_tag_trend_chart(years_tag_data, output_dir)
+            generated.extend(files)
+        except Exception as e:
+            logger.error("Error generating tag trend chart: %s", e)
+
+    # 6. Generate all CSVs
+    try:
+        years_data = {}
+        for y in all_years:
+            p = await pipeline_manager.ensure_loaded(y)
+            years_data[y] = p.data
+
+        settings = get_settings()
+        output_dir = settings.artifacts_dir / year
+        files = generate_all_csvs(year, pipeline.data, years_data, output_dir)
+        generated.extend(files)
+    except Exception as e:
+        logger.error("Error generating CSVs: %s", e)
+
+    return {
+        "year": year,
+        "status": "completed",
+        "charts_generated": len(generated),
+        "files": [str(f).split("/")[-1] for f in generated],
     }
 
 

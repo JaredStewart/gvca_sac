@@ -2,8 +2,8 @@
 
 ## Categories and Explanations
 
-### Concern  
-Feedback highlighting issues, challenges, or areas for improvement within the school.
+### Concern *(opposite-condition marker)*
+Applied to **Good Choice (Q8)** responses that contain a negative sentiment or concern despite being in a positive-framed question. This tag flags that the response actually reflects something that could be improved, even though the parent wrote it under "good choice."
 
 ### Curriculum  
 Feedback on the structure, content, and effectiveness of the school's academic programs, including subject offerings and instructional approaches.  
@@ -140,5 +140,5 @@ Observations on the school’s physical infrastructure, cleanliness, classroom r
 
 
 
-### No improvement listed  
-Responses that do not indicate a specific issue or area for improvement.
+### No improvement listed *(opposite-condition marker)*
+Applied to **Better Serve (Q9)** responses that do not actually indicate a specific issue or area for improvement. This tag flags that the response is effectively positive or neutral despite being in an improvement-framed question (e.g., "Nothing, GVCA is great!").

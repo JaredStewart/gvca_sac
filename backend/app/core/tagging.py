@@ -81,7 +81,12 @@ def build_user_prompt(response_text: str, question_context: str | None = None) -
         "2. Assign ALL tags that apply to the response content\n"
         "3. A response can have multiple tags\n"
         "4. Only assign tags that are clearly relevant to the response content\n"
-        "5. Return the list of applicable tag names exactly as they appear in the taxonomy"
+        "5. Return the list of applicable tag names exactly as they appear in the taxonomy\n"
+        "6. OPPOSITE-CONDITION MARKERS:\n"
+        '   - "Concern": Use ONLY on Good Choice (Q8) responses that contain negative '
+        "sentiment or concerns despite being in a positive-framed question\n"
+        '   - "No improvement listed": Use ONLY on Better Serve (Q9) responses that do '
+        "not actually identify an area for improvement (e.g., 'Nothing' or general praise)"
     )
 
     return "\n".join(parts)

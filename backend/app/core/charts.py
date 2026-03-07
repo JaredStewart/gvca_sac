@@ -711,3 +711,321 @@ async def generate_sentiment_chart(
     ]
 
     return sentiment_data
+
+
+# ================ New Chart Functions for Export-All ================
+
+
+def generate_composite_satisfaction_chart(
+    years_data: dict[str, pl.DataFrame],
+    output_dir: Path,
+) -> list[str]:
+    """Generate overall composite satisfaction line chart and CSV.
+
+    For each year, compute percentage of all responses in each satisfaction tier
+    (by position, not label) aggregated across all 7 questions and all levels.
+    """
+    years = sorted(years_data.keys())
+    tier_labels = ["Extremely Satisfied", "Satisfied", "Somewhat Satisfied", "Dissatisfied"]
+    tier_colors = ["#4CAF50", "#2196F3", "#FFC107", "#B71C1C"]
+
+    # Compute tier percentages per year
+    tier_data: dict[str, list[float]] = {year: [0.0] * 4 for year in years}
+
+    for year in years:
+        df = years_data[year]
+        total_count = 0
+        tier_counts = [0, 0, 0, 0]
+
+        for question in QUESTIONS:
+            if question in FREE_RESPONSE_QUESTIONS:
+                continue
+            scale = QUESTION_SCALES.get(question, [])
+            if len(scale) != 4:
+                continue
+
+            for level in LEVELS:
+                col_name = f"({level}) {question}"
+                if col_name not in df.columns:
+                    continue
+                for idx, s in enumerate(scale):
+                    count = df.filter(pl.col(col_name) == s).height
+                    tier_counts[idx] += count
+                    total_count += count
+
+        if total_count > 0:
+            tier_data[year] = [round(c / total_count * 100, 1) for c in tier_counts]
+
+    # Generate line chart
+    fig, ax = setup_figure((10, 6))
+
+    for tier_idx in range(4):
+        values = [tier_data[y][tier_idx] for y in years]
+        ax.plot(years, values, marker='o', linewidth=2.5, markersize=8,
+                label=tier_labels[tier_idx], color=tier_colors[tier_idx])
+        for i, (x, v) in enumerate(zip(years, values)):
+            ax.annotate(f'{v}%', (x, v), textcoords="offset points",
+                        xytext=(0, 10), ha='center', fontsize=9, fontweight='bold',
+                        color=tier_colors[tier_idx])
+
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Percentage')
+    ax.set_title('Overall Composite Satisfaction Scores')
+    ax.set_ylim(0, 60)
+    ax.legend(loc='upper right', fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    generated = []
+    generated.append(save_chart(fig, output_dir, 'overall_composite_satisfaction.png'))
+
+    # Generate CSV
+    csv_path = output_dir / 'overall_composite_satisfaction.csv'
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with open(csv_path, 'w') as f:
+        f.write('Year,' + ','.join(f'{l} (%)' for l in tier_labels) + '\n')
+        for year in years:
+            vals = ','.join(str(v) for v in tier_data[year])
+            f.write(f'{year},{vals}\n')
+    generated.append(str(csv_path))
+
+    return generated
+
+
+def generate_good_choice_better_serve_chart(
+    free_responses: list[dict[str, Any]],
+    year: str,
+    output_dir: Path,
+) -> list[str]:
+    """Generate Good Choice vs Better Serve difference bar chart and CSV."""
+    # Group by respondent to compute counts
+    respondent_types: dict[str, set[str]] = {}
+    for r in free_responses:
+        sid = r.get("survey_response_id") or r.get("response_id", "")
+        qt = r.get("question_type", "")
+        if sid not in respondent_types:
+            respondent_types[sid] = set()
+        respondent_types[sid].add(qt)
+
+    total_gc = sum(1 for t in respondent_types.values() if "praise" in t)
+    total_bs = sum(1 for t in respondent_types.values() if "improvement" in t)
+    only_gc = sum(1 for t in respondent_types.values() if "praise" in t and "improvement" not in t)
+
+    total_respondents = len(respondent_types)
+    only_pct = round(only_gc / total_respondents * 100) if total_respondents > 0 else 0
+
+    fig, ax = setup_figure((8, 6))
+
+    categories = ['Good Choice\nResponses', 'ONLY Good Choice\nResponses Provided', 'Better Serve\nResponses']
+    values = [total_gc, only_gc, total_bs]
+    colors = ['#4CAF50', '#A5D6A7', '#800020']
+
+    bars = ax.bar(categories, values, color=colors, edgecolor='white', width=0.6)
+
+    # Labels inside bars
+    for bar, val in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() / 2,
+                str(val), ha='center', va='center', fontsize=16, fontweight='bold', color='white')
+
+    # Dashed reference lines
+    ax.axhline(y=total_gc, color='#999', linestyle='--', linewidth=0.8)
+    ax.axhline(y=total_bs, color='#999', linestyle='--', linewidth=0.8)
+
+    ax.set_ylabel('Number of Open Responses')
+    ax.set_title(f'Good Choice vs Better Serve ({year})')
+    ax.set_ylim(0, max(values) * 1.2)
+
+    # Annotation
+    ax.annotate(f'{only_pct}% ONLY gave\npositive responses!',
+                xy=(1, only_gc), xytext=(2.2, total_gc * 0.85),
+                fontsize=10, fontweight='bold', color='#2E7D32',
+                arrowprops=dict(arrowstyle='->', color='#666'),
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='#666'))
+
+    fig.tight_layout()
+
+    generated = []
+    generated.append(save_chart(fig, output_dir, f'good_choice_better_serve_{year}.png'))
+
+    # CSV
+    csv_path = output_dir / f'good_choice_better_serve_{year}.csv'
+    with open(csv_path, 'w') as f:
+        f.write('Category,Count\n')
+        f.write(f'Good Choice Responses,{total_gc}\n')
+        f.write(f'ONLY Good Choice Responses Provided,{only_gc}\n')
+        f.write(f'Better Serve Responses,{total_bs}\n')
+        f.write(f'Both Good Choice & Better Serve,{total_gc - only_gc}\n')
+        f.write(f'ONLY Positive Response %,{only_pct}\n')
+    generated.append(str(csv_path))
+
+    return generated
+
+
+def generate_tag_trend_chart(
+    years_tag_data: dict[str, dict[str, dict[str, int]]],
+    output_dir: Path,
+) -> list[str]:
+    """Generate tag response trend chart (Good Choice / Better Serve by tag, YoY).
+
+    years_tag_data: {year: {good_choice: {tag: count}, better_serve: {tag: count}}}
+    """
+    years = sorted(years_tag_data.keys())
+
+    # Collect all tags
+    all_gc_tags: set[str] = set()
+    all_bs_tags: set[str] = set()
+    for yd in years_tag_data.values():
+        all_gc_tags.update(yd.get("good_choice", {}).keys())
+        all_bs_tags.update(yd.get("better_serve", {}).keys())
+    all_tags = sorted(all_gc_tags | all_bs_tags)
+
+    if not all_tags:
+        return []
+
+    fig, ax = setup_figure((12, 7))
+
+    x = np.arange(len(years))
+    n_tags = len(all_tags)
+
+    # Green shades for good choice, red shades for better serve
+    green_shades = plt.cm.Greens(np.linspace(0.3, 0.9, n_tags))
+    red_shades = plt.cm.Reds(np.linspace(0.3, 0.9, n_tags))
+
+    # Stack positive (good choice) above zero
+    gc_bottom = np.zeros(len(years))
+    for i, tag in enumerate(all_tags):
+        values = [years_tag_data[y].get("good_choice", {}).get(tag, 0) for y in years]
+        ax.bar(x, values, bottom=gc_bottom, width=0.6, label=f'{tag} (GC)' if i < 5 else '',
+               color=green_shades[i])
+        gc_bottom += np.array(values)
+
+    # Stack negative (better serve) below zero
+    bs_bottom = np.zeros(len(years))
+    for i, tag in enumerate(all_tags):
+        values = [-years_tag_data[y].get("better_serve", {}).get(tag, 0) for y in years]
+        ax.bar(x, values, bottom=-bs_bottom, width=0.6, label=f'{tag} (BS)' if i < 5 else '',
+               color=red_shades[i])
+        bs_bottom += np.array([-v for v in values])
+
+    ax.axhline(y=0, color='#333', linewidth=1.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(years)
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Tag Count')
+    ax.set_title('Tag Response Trend (Good Choice / Better Serve by Year)')
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{abs(int(v))}'))
+
+    # Simplified legend (only show first 5 tags to avoid clutter)
+    ax.legend(loc='upper left', fontsize=7, ncol=2)
+
+    # Annotate YoY change in negative comments
+    if len(years) >= 2:
+        last_neg = sum(years_tag_data[years[-1]].get("better_serve", {}).values())
+        first_neg = sum(years_tag_data[years[0]].get("better_serve", {}).values())
+        if first_neg > 0:
+            pct_change = round((last_neg - first_neg) / first_neg * 100)
+            if pct_change < 0:
+                ax.annotate(f'{abs(pct_change)}% drop in negative comments!',
+                            xy=(len(years) - 1, -last_neg / 2),
+                            fontsize=9, fontweight='bold', color='#B71C1C',
+                            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='#B71C1C'))
+
+    fig.tight_layout()
+
+    generated = []
+    generated.append(save_chart(fig, output_dir, 'tag_response_trend.png'))
+
+    # CSV
+    csv_path = output_dir / 'tag_response_trend.csv'
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with open(csv_path, 'w') as f:
+        headers = ['Year'] + [f'{tag} - Good Choice' for tag in all_tags] + [f'{tag} - Better Serve' for tag in all_tags] + ['GC Total', 'BS Total']
+        f.write(','.join(headers) + '\n')
+        for year in years:
+            gc = years_tag_data[year].get("good_choice", {})
+            bs = years_tag_data[year].get("better_serve", {})
+            row = [year]
+            row.extend([str(gc.get(tag, 0)) for tag in all_tags])
+            row.extend([str(bs.get(tag, 0)) for tag in all_tags])
+            row.append(str(sum(gc.values())))
+            row.append(str(sum(bs.values())))
+            f.write(','.join(row) + '\n')
+    generated.append(str(csv_path))
+
+    return generated
+
+
+def generate_all_csvs(
+    year: str,
+    df: pl.DataFrame,
+    years_data: dict[str, pl.DataFrame],
+    output_dir: Path,
+) -> list[str]:
+    """Generate CSV exports for all chart data.
+
+    Includes per-question subgroup and YoY data with both percentages and counts.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    generated = []
+    years = sorted(years_data.keys())
+
+    for q_idx, question in enumerate(QUESTIONS):
+        if question in FREE_RESPONSE_QUESTIONS:
+            continue
+
+        q_num = q_idx + 1
+        scale = QUESTION_SCALES.get(question, [])
+        if not scale:
+            continue
+
+        # Subgroup CSV (Grammar/Middle/High for selected year)
+        csv_path = output_dir / f'q{q_num}_subgroups_{year}.csv'
+        with open(csv_path, 'w') as f:
+            headers = ['Level'] + [f'{s} (%)' for s in scale] + [f'{s} (N)' for s in scale] + ['Weighted Average']
+            f.write(','.join(headers) + '\n')
+            for level in LEVELS:
+                pcts = compute_satisfaction_percentages(df, question, level, scale)
+                col_name = f"({level}) {question}"
+                total = df.filter(pl.col(col_name).is_not_null()).height if col_name in df.columns else 0
+                counts = []
+                for s in scale:
+                    count = df.filter(pl.col(col_name) == s).height if col_name in df.columns else 0
+                    counts.append(count)
+
+                pct_vals = [str(pcts.get(s, 0)) for s in scale]
+                count_vals = [str(c) for c in counts]
+
+                # Weighted average
+                avg = sum((len(scale) - i) * (pcts.get(s, 0) / 100) for i, s in enumerate(scale)) * 4 / len(scale) if total > 0 else 0
+                # Simplified: weighted average = sum(rank * pct) / 100
+                wavg = sum((len(scale) - i) * pcts.get(s, 0) for i, s in enumerate(scale)) / 100
+
+                f.write(f'{level},{",".join(pct_vals)},{",".join(count_vals)},{wavg:.2f}\n')
+        generated.append(str(csv_path))
+
+        # YoY CSV
+        csv_path = output_dir / f'q{q_num}_yoy.csv'
+        with open(csv_path, 'w') as f:
+            headers = ['Year'] + [f'{s} (%)' for s in scale] + [f'{s} (N)' for s in scale] + ['Weighted Average']
+            f.write(','.join(headers) + '\n')
+            for y in years:
+                y_df = years_data[y]
+                # Average across levels
+                level_pcts: dict[str, list[float]] = {s: [] for s in scale}
+                level_counts: dict[str, int] = {s: 0 for s in scale}
+                for level in LEVELS:
+                    pcts = compute_satisfaction_percentages(y_df, question, level, scale)
+                    col_name = f"({level}) {question}"
+                    for s in scale:
+                        level_pcts[s].append(pcts.get(s, 0))
+                        if col_name in y_df.columns:
+                            level_counts[s] += y_df.filter(pl.col(col_name) == s).height
+
+                avg_pcts = {s: round(np.mean(level_pcts[s]), 1) if level_pcts[s] else 0 for s in scale}
+                pct_vals = [str(avg_pcts[s]) for s in scale]
+                count_vals = [str(level_counts[s]) for s in scale]
+                wavg = sum((len(scale) - i) * avg_pcts.get(s, 0) for i, s in enumerate(scale)) / 100
+
+                f.write(f'{y},{",".join(pct_vals)},{",".join(count_vals)},{wavg:.2f}\n')
+        generated.append(str(csv_path))
+
+    return generated
