@@ -49,3 +49,7 @@ frontend/build/
 .coverage
 htmlcov/
 coverage/
+
+# Docker cert files (for corporate proxies)
+.docker/
+docker-compose.override.yml
