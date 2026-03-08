@@ -26,7 +26,7 @@ if ! command -v socat &>/dev/null; then
     sudo apt-get update && sudo apt-get install -y socat
 fi
 echo "Starting socat port forward for PocketBase..."
-socat TCP4-LISTEN:8090,reuseaddr,fork TCP4:pocketbase:8090 &
+nohup socat TCP4-LISTEN:8090,reuseaddr,fork TCP4:pocketbase:8090 >/dev/null 2>&1 &
 echo "PocketBase port forward started (localhost:8090 → pocketbase:8090)"
 
 # Wait for PocketBase sidecar (started by Docker Compose)
