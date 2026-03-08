@@ -31,6 +31,6 @@ cd "${WORKSPACE}/backend"
 uv run python -c "import fastapi; print(f'FastAPI {fastapi.__version__} OK')"
 cd "${WORKSPACE}/frontend"
 node -e "console.log('Node ' + process.version + ' OK')"
-pocketbase --version || echo "PocketBase version check skipped"
+echo "PocketBase runs as Docker Compose sidecar"
 
 echo "Update Content Command Script Complete"

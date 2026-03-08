@@ -22,14 +22,6 @@ sudo apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && sudo apt-get -y install --no-install-recommends build-essential \
     && sudo apt-get autoremove -y && sudo apt-get clean -y && sudo rm -rf /var/lib/apt/lists/*
 
-# Download PocketBase binary
-POCKETBASE_VERSION="0.22.22"
-echo "Installing PocketBase v${POCKETBASE_VERSION}..."
-curl -fsSL "https://github.com/pocketbase/pocketbase/releases/download/v${POCKETBASE_VERSION}/pocketbase_${POCKETBASE_VERSION}_linux_amd64.zip" -o /tmp/pocketbase.zip
-sudo unzip -o /tmp/pocketbase.zip -d /usr/local/bin/ pocketbase
-sudo chmod +x /usr/local/bin/pocketbase
-rm /tmp/pocketbase.zip
-
 # Create required directories
 WORKSPACE="/workspaces/gvca_sac"
 mkdir -p "${WORKSPACE}/data" "${WORKSPACE}/artifacts" "${WORKSPACE}/pocketbase/pb_data"

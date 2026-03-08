@@ -22,10 +22,9 @@
             "description": "Setup Claude more quickly after container rebuild"
         }
     },
-    "build": {
-        "dockerfile": "./Dockerfile",
-        "context": "../.."
-    },
+    "dockerComposeFile": ["docker-compose.dev.yml"],
+    "service": "devcontainer",
+    "workspaceFolder": "/workspaces/gvca_sac",
     // features repo which has help and options for each feature: https://github.com/devcontainers/features
     "features": {
         "ghcr.io/devcontainers/features/node:1": {

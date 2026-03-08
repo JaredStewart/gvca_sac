@@ -1,2 +1,0 @@
-This file is included to prevent the Dockerfile COPY instruction from
-failing if no other files need to be copied.
