@@ -20,6 +20,10 @@ interface AppState {
   } | null
   setPipelineStatus: (status: AppState['pipelineStatus']) => void
 
+  // Family weighting toggle
+  weightByParents: boolean
+  toggleWeightByParents: () => void
+
   // Active jobs
   activeJobs: Job[]
   addJob: (job: Job) => void
@@ -36,6 +40,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   pipelineStatus: null,
   setPipelineStatus: (status) => set({ pipelineStatus: status }),
+
+  weightByParents: true,
+  toggleWeightByParents: () => set((state) => ({ weightByParents: !state.weightByParents })),
 
   activeJobs: [],
   addJob: (job) =>

@@ -264,13 +264,14 @@ def calculate_question_totals(
     return pl.DataFrame(results)
 
 
-def compute_statistics(df: pl.DataFrame, config: SurveyConfig | None = None) -> dict[str, Any]:
+def compute_statistics(df: pl.DataFrame, config: SurveyConfig | None = None, weight_by_parents: bool = True) -> dict[str, Any]:
     """
     Compute all statistics for a survey dataset.
 
     Args:
         df: Survey DataFrame
         config: Survey configuration
+        weight_by_parents: Whether to weight by number of parents (coordinated=1.0, individual=0.75)
 
     Returns:
         Dictionary with all computed statistics
@@ -279,10 +280,10 @@ def compute_statistics(df: pl.DataFrame, config: SurveyConfig | None = None) -> 
         config = SurveyConfig()
 
     # Compute averages (weighted: coordinated=1.0, individual=0.75)
-    df_with_avgs, weighted_totals = compute_averages(df, weight_by_parents=True, config=config)
+    df_with_avgs, weighted_totals = compute_averages(df, weight_by_parents=weight_by_parents, config=config)
 
     # Compute question totals (weighted: coordinated=1.0, individual=0.75)
-    question_totals = calculate_question_totals(df, weight_by_parents=True)
+    question_totals = calculate_question_totals(df, weight_by_parents=weight_by_parents)
 
     # Summary statistics
     total_responses = len(df)
