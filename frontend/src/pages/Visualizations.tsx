@@ -16,6 +16,10 @@ import type { FreeResponseCounts } from '@/components/visualizations/GoodChoiceB
 import TagTrendChart, { getTagTrendCsvData, getTagTrendCsvColumns } from '@/components/visualizations/TagTrendChart'
 import type { TagTrendDataPoint } from '@/components/visualizations/TagTrendChart'
 import TagFrequencyChart from '@/components/visualizations/TagFrequencyChart'
+import CrossSectionChart, { getCrossSectionCsvData, crossSectionCsvColumns } from '@/components/visualizations/CrossSectionChart'
+import type { CrossSectionBar } from '@/components/visualizations/CrossSectionChart'
+import CompositeScoreTable, { getCompositeScoreCsvData, compositeScoreCsvColumns } from '@/components/visualizations/CompositeScoreTable'
+import type { CompositeScoreRow } from '@/components/visualizations/CompositeScoreTable'
 import ExportableCard from '@/components/visualizations/ExportableCard'
 import { SURVEY_QUESTIONS, QUESTION_SCALES, SCHOOL_LEVELS } from '@/constants'
 
@@ -222,8 +226,42 @@ function buildCompositeData(
     })
 }
 
+// ============ Cross-Section Data Builder ============
+
+function buildCrossSectionData(
+  questionGroups: QuestionTotalRow[][] | undefined,
+  segmentKey?: string
+): CrossSectionBar[] {
+  if (!questionGroups) return []
+
+  return Array.from({ length: 7 }, (_, qi) => {
+    const rows = questionGroups[qi]
+    const scale = QUESTION_SCALES[qi]
+    const survey = SURVEY_QUESTIONS[qi]
+    if (!rows || !scale || !survey) return null
+
+    const dist = segmentKey
+      ? extractLevelDistribution(rows, segmentKey, scale.labels)
+      : extractTotalDistribution(rows, scale.labels)
+
+    return {
+      questionLabel: `Q${survey.presentationNumber}: ${survey.shortTitle}`,
+      distribution: dist,
+      weightedAverage: computeWeightedAverage(dist),
+    }
+  }).filter((b): b is CrossSectionBar => b !== null)
+}
+
+// ============ Demographic Segments ============
+
+const DEMOGRAPHIC_SEGMENTS = [
+  { key: 'Support', label: 'Support Services (IEP, 504, ALP, or READ Plan)' },
+  { key: 'Minority', label: 'Minority Status (Racial, Ethnic, or Cultural)' },
+  { key: 'Year 1 Families', label: 'Families New to GVCA (Year 1)' },
+]
+
 // Opposite-condition marker tags — excluded from frequency/trend charts
-const EXCLUDED_TAGS = new Set(['Concern', 'No improvement listed'])
+const EXCLUDED_TAGS = new Set(['Concern', 'No improvement listed', 'All Around Support'])
 
 // ============ Tag Frequency Types & Merge ============
 
@@ -321,7 +359,7 @@ function buildTagTrendData(
 // ============ Page Component ============
 
 export default function Visualizations() {
-  const { selectedYear } = useAppStore()
+  const { selectedYear, weightByParents, toggleWeightByParents } = useAppStore()
   const [exportStatus, setExportStatus] = useState<'idle' | 'exporting' | 'done'>('idle')
 
   // Fetch available years
@@ -335,8 +373,8 @@ export default function Visualizations() {
   // Fetch statistics for ALL available years in parallel
   const statisticsQueries = useQueries({
     queries: availableYears.map((year) => ({
-      queryKey: ['statistics', year],
-      queryFn: () => dataApi.getStatistics(year),
+      queryKey: ['statistics', year, weightByParents],
+      queryFn: () => dataApi.getStatistics(year, weightByParents),
       staleTime: Infinity,
     })),
   })
@@ -425,6 +463,41 @@ export default function Visualizations() {
     [allYearsData, availableYears]
   )
 
+  // Composite score table rows from weighted_averages
+  const compositeScoreRows = useMemo(() => {
+    const rows: CompositeScoreRow[] = []
+    for (let i = 0; i < availableYears.length; i++) {
+      const year = availableYears[i]
+      const data = statisticsQueries[i]?.data
+      if (!data?.weighted_averages) continue
+      const wa = data.weighted_averages
+      rows.push({
+        year,
+        overall: wa['Overall Average'] ?? null,
+        grammar: wa['Grammar Average'] ?? null,
+        middle: wa['Middle Average'] ?? null,
+        high: wa['High Average'] ?? null,
+      })
+    }
+    return rows
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableYears.join(','), statisticsQueries.map((q) => q.dataUpdatedAt).join(',')])
+
+  // Cross-section data for whole school (selected year)
+  const crossSectionData = useMemo(() => {
+    if (!selectedYear) return []
+    return buildCrossSectionData(allYearsData[selectedYear])
+  }, [allYearsData, selectedYear])
+
+  // Sub-demographic cross-section data
+  const demographicCrossSections = useMemo(() => {
+    if (!selectedYear) return []
+    return DEMOGRAPHIC_SEGMENTS.map((seg) => ({
+      ...seg,
+      bars: buildCrossSectionData(allYearsData[selectedYear], seg.key),
+    }))
+  }, [allYearsData, selectedYear])
+
   const tagFrequencyData = useMemo(
     () => mergeTagDistributions(goodChoiceQuery.data?.distribution, betterServeQuery.data?.distribution),
     [goodChoiceQuery.data, betterServeQuery.data]
@@ -477,25 +550,45 @@ export default function Visualizations() {
 
   return (
     <div className="space-y-6">
+      {/* Header: Title + Weighting Toggle + Export */}
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Visualizations</h2>
-        <button
-          onClick={() => {
-            setExportStatus('exporting')
-            exportAllMutation.mutate()
-          }}
-          disabled={exportStatus !== 'idle'}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {exportStatus === 'exporting' ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : exportStatus === 'done' ? (
-            <Check className="h-4 w-4" />
-          ) : (
-            <Download className="h-4 w-4" />
-          )}
-          {exportStatus === 'exporting' ? 'Exporting...' : exportStatus === 'done' ? 'Exported to Artifacts' : 'Export All to Artifacts'}
-        </button>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <span className="text-muted-foreground">Family Weighting</span>
+            <button
+              role="switch"
+              aria-checked={weightByParents}
+              onClick={toggleWeightByParents}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                weightByParents ? 'bg-primary' : 'bg-muted-foreground/30'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  weightByParents ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                }`}
+              />
+            </button>
+          </label>
+          <button
+            onClick={() => {
+              setExportStatus('exporting')
+              exportAllMutation.mutate()
+            }}
+            disabled={exportStatus !== 'idle'}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {exportStatus === 'exporting' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : exportStatus === 'done' ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {exportStatus === 'exporting' ? 'Exporting...' : exportStatus === 'done' ? 'Exported to Artifacts' : 'Export All to Artifacts'}
+          </button>
+        </div>
       </div>
 
       {statsErrors.length > 0 && (
@@ -515,6 +608,23 @@ export default function Visualizations() {
         </Alert>
       ) : (
         <>
+          {/* Composite Score Data Table */}
+          {compositeScoreRows.length > 0 && (
+            <ExportableCard
+              title="Composite Satisfaction Scores by Year"
+              filename={`Composite-Scores-Table`}
+              csvData={getCompositeScoreCsvData(compositeScoreRows)}
+              csvColumns={compositeScoreCsvColumns}
+              csvFilename="Composite-Scores-Table"
+            >
+              <CompositeScoreTable
+                title="Composite Satisfaction Scores by Year"
+                rows={compositeScoreRows}
+                weighted={weightByParents}
+              />
+            </ExportableCard>
+          )}
+
           {/* Overall Composite Satisfaction Scores */}
           {compositeData.length > 0 && (
             <ExportableCard
@@ -526,6 +636,41 @@ export default function Visualizations() {
             >
               <CompositeLineChart data={compositeData} />
             </ExportableCard>
+          )}
+
+          {/* Whole School Cross-Section Chart */}
+          {crossSectionData.length > 0 && (
+            <ExportableCard
+              title={`Whole School Question Cross-Section - ${selectedYear}`}
+              filename={`Cross-Section-WholeSchool-${selectedYear}`}
+              csvData={getCrossSectionCsvData(crossSectionData)}
+              csvColumns={crossSectionCsvColumns}
+              csvFilename={`Cross-Section-WholeSchool-${selectedYear}`}
+            >
+              <CrossSectionChart
+                title={`Whole School Question Cross-Section - ${selectedYear}`}
+                bars={crossSectionData}
+              />
+            </ExportableCard>
+          )}
+
+          {/* Sub-Demographic Cross-Section Charts */}
+          {demographicCrossSections.map((seg) =>
+            seg.bars.length > 0 ? (
+              <ExportableCard
+                key={seg.key}
+                title={`${seg.label} - Question Cross-Section - ${selectedYear}`}
+                filename={`Cross-Section-${seg.key.replace(/\s+/g, '-')}-${selectedYear}`}
+                csvData={getCrossSectionCsvData(seg.bars)}
+                csvColumns={crossSectionCsvColumns}
+                csvFilename={`Cross-Section-${seg.key.replace(/\s+/g, '-')}-${selectedYear}`}
+              >
+                <CrossSectionChart
+                  title={`${seg.label} - Question Cross-Section - ${selectedYear}`}
+                  bars={seg.bars}
+                />
+              </ExportableCard>
+            ) : null
           )}
 
           {/* Per-Question Charts - Subgroup and YoY separately */}

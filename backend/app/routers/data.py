@@ -659,7 +659,7 @@ async def export_data(year: str):
 
 
 @router.get("/{year}/statistics")
-async def get_statistics(year: str):
+async def get_statistics(year: str, weight_by_parents: bool = Query(True)):
     """Get computed statistics for a year."""
     pipeline = await pipeline_manager.ensure_loaded(year)
 
@@ -667,7 +667,7 @@ async def get_statistics(year: str):
     from app.core.analysis import compute_statistics
 
     try:
-        stats = compute_statistics(pipeline.data, pipeline.config)
+        stats = compute_statistics(pipeline.data, pipeline.config, weight_by_parents=weight_by_parents)
         pipeline.statistics = stats
         return stats
     except Exception as e:

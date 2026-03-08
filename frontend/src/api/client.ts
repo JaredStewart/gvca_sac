@@ -182,13 +182,13 @@ export const dataApi = {
       { method: 'POST', body: { force_reprocess } }
     ),
 
-  getStatistics: (year: string) =>
+  getStatistics: (year: string, weightByParents?: boolean) =>
     request<{
       total_responses: number
       weighted_averages: Record<string, number | null>
       level_counts: Record<string, number>
       question_totals: unknown[]
-    }>(`/api/data/${year}/statistics`),
+    }>(`/api/data/${year}/statistics${weightByParents === false ? '?weight_by_parents=false' : ''}`),
 
   getResponses: (year: string, params?: {
     page?: number
