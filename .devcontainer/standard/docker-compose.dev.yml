@@ -5,7 +5,8 @@ services:
       - ../..:/workspaces/gvca_sac:cached
     command: sleep infinity
     depends_on:
-      - pocketbase
+      pocketbase:
+        condition: service_healthy
 
   pocketbase:
     build:
