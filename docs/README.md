@@ -7,6 +7,8 @@ This directory contains detailed documentation for the GVCA SAC Survey Analysis 
 | Document | Description |
 |----------|-------------|
 | [Architecture](architecture.md) | System design, data flow, and component overview |
+| [Data Model](data-model.md) | Database schema, CSV format, and collection relationships |
+| [Reproducing State](reproducing-state.md) | How to transfer pipeline state between environments |
 | [API Reference](api-reference.md) | REST API endpoint documentation |
 | [Testing](testing.md) | Test setup, patterns, and running tests |
 
