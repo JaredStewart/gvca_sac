@@ -19,6 +19,16 @@ if [ -f "${WORKSPACE}/.env" ]; then
     set +a
 fi
 
+# Forward PocketBase sidecar port to localhost for Codespaces port forwarding
+# Docker Compose sidecars are accessible by service name, not localhost
+if ! command -v socat &>/dev/null; then
+    echo "Installing socat..."
+    sudo apt-get update && sudo apt-get install -y socat
+fi
+echo "Starting socat port forward for PocketBase..."
+socat TCP4-LISTEN:8090,reuseaddr,fork TCP4:pocketbase:8090 &
+echo "PocketBase port forward started (localhost:8090 → pocketbase:8090)"
+
 # Wait for PocketBase sidecar (started by Docker Compose)
 echo "Waiting for PocketBase..."
 for i in $(seq 1 30); do

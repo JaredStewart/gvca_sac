@@ -19,7 +19,7 @@ uv python install 3.13
 # Install build dependencies for native Python extensions (numba, hdbscan, etc.)
 echo "Installing build-essential..."
 sudo apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && sudo apt-get -y install --no-install-recommends build-essential \
+    && sudo apt-get -y install --no-install-recommends build-essential socat \
     && sudo apt-get autoremove -y && sudo apt-get clean -y && sudo rm -rf /var/lib/apt/lists/*
 
 # Create required directories
