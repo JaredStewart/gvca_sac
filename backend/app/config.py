@@ -1,5 +1,6 @@
 """Application configuration settings."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from pydantic_settings import BaseSettings
@@ -13,8 +14,11 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Paths
-    data_dir: Path = Path("/app/data")
-    artifacts_dir: Path = Path("/app/artifacts")
+    data_dir: Path = Path(os.environ.get("DATA_DIR", "/app/data"))
+    artifacts_dir: Path = Path(os.environ.get("ARTIFACTS_DIR", "/app/artifacts"))
+
+    # CORS
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # PocketBase
     pocketbase_url: str = "http://localhost:8090"
