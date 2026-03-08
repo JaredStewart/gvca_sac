@@ -21,7 +21,8 @@ data/embeddings/{year}.parquet   # Cached embedding vectors
 
 # Optional (can regenerate for free)
 artifacts/                       # Charts and CSV exports
-data/processed/{year}.csv        # Normalized data
+# Note: data/processed/{year}.csv is NOT auto-created by the pipeline.
+# It can be generated on-demand via load_flattened() / combine_years().
 ```
 
 Start PocketBase and the app — everything works immediately.
@@ -51,7 +52,7 @@ If a direct file copy isn't possible:
 
 | Stage | Cost | What to Preserve |
 |-------|------|------------------|
-| **Tagging** | 4 OpenAI API calls per response | `tagging_results` collection |
+| **Tagging** | 1 OpenAI API call with `n=4` samples per response | `tagging_results` collection |
 | **Embeddings** | 1 API call per unique response | `data/embeddings/{year}.parquet` |
 | **Manual reviews** | Human time | `tag_overrides`, `cluster_metadata` |
 | **Clustering** | CPU only (seconds) | Can re-run, but results are stochastic |

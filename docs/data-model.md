@@ -162,6 +162,8 @@ Tracks async batch processing jobs (OpenAI Batch API).
 | error_file_id | text | |
 | estimated_cost | number | |
 | model_used | text | |
+| batch_group_id | text | groups related sub-batches together |
+| estimated_tokens | number | token count for cost estimation |
 | error_message | text | |
 | started_at | text | |
 | completed_at | text | |
@@ -212,7 +214,7 @@ tagging_results    --- batch_jobs          [via batch_id]
 | Path | Content | Regenerable? |
 |------|---------|--------------|
 | `data/{year}.csv` | Raw Survey Monkey export | No (original input) |
-| `data/processed/{year}.csv` | Normalized survey data | Yes (from raw CSV) |
+| `data/processed/{year}.csv` | Normalized survey data | Yes (on-demand via `load_flattened()`; not auto-created by pipeline) |
 | `data/embeddings/{year}.parquet` | Embedding vectors | Yes (costs API calls) |
 | `artifacts/{year}_*.png` | Chart visualizations | Yes (free) |
 | `artifacts/tagging_{year}.csv` | Tag export with columns | Yes (free) |

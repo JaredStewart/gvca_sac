@@ -65,6 +65,8 @@ cd frontend && npm test
 - [Architecture](docs/architecture.md) - System design and data flow
 - [API Reference](docs/api-reference.md) - REST API endpoints
 - [Testing](docs/testing.md) - Test setup and patterns
+- [Data Model](docs/data-model.md) - Database schema and file artifacts
+- [Reproducing State](docs/reproducing-state.md) - Pipeline state transfer guide
 - [Developer Guide](CLAUDE.md) - Detailed development reference
 
 ## Project Structure
