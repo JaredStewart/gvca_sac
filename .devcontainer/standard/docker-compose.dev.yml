@@ -6,7 +6,7 @@ services:
     command: sleep infinity
     depends_on:
       pocketbase:
-        condition: service_healthy
+        condition: service_started
 
   pocketbase:
     build:
