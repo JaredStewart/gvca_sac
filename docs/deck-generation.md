@@ -51,7 +51,7 @@ Request body:
 | Slides | Content | What Gets Replaced |
 |--------|---------|---------------------|
 | 7-8 | Survey participation | Table values |
-| 10-11 | Overview stacked bars | Chart images |
+| 11 | Rank Question Results Overview | Chart image |
 | 13 | Composite scores | Table values |
 | 15 | YoY composite satisfaction | Chart image |
 | 16-22 | Q3-Q9 per-question | 2 chart images + text annotations |
@@ -65,7 +65,7 @@ Request body:
 | Slides | Content |
 |--------|---------|
 | 1-6 | Title, exec summary, team, confidentiality, questions |
-| 9, 23 | Section dividers |
+| 9-10, 23 | Section dividers / chart legend |
 | 12 | Subgroup observations |
 | 14 | Grade level observations |
 | 24-25 | Open response process, nature of responses |

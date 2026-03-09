@@ -6,6 +6,7 @@ and writes the result to artifacts/{year}/presentation_{year}.pptx.
 """
 
 import logging
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 # 1-indexed slide numbers that get a "NEEDS UPDATING" banner
 NARRATIVE_SLIDES = {
     1, 2, 3, 4, 5, 6,
-    9,
+    9, 10,
     12, 14,
     23, 24, 25,
     37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
@@ -54,7 +55,6 @@ NARRATIVE_SLIDES = {
 # Mapping of slide number -> list of (image_index, chart_func_name, kwargs)
 # image_index is the order among image shapes on that slide (0-based, L-to-R)
 CHART_SLIDES: dict[int, list[tuple[int, str, dict[str, Any]]]] = {
-    10: [(0, "overview_stacked_bar", {})],
     11: [(0, "overview_results_chart", {})],
     15: [(0, "composite_satisfaction_chart", {})],
     16: [(0, "question_stacked_bar", {"q_idx": 0, "q_num": 3}),
@@ -77,15 +77,15 @@ CHART_SLIDES: dict[int, list[tuple[int, str, dict[str, Any]]]] = {
 
 # Tag categories and their slide numbers (slides 28-36)
 TAG_CATEGORIES = [
-    "Culture / Virtues",
-    "Academics / Curriculum",
-    "Teachers / Staff",
-    "Community / Environment",
+    "Culture/ Virtues",
+    "Curriculum",
+    "Policies/ Administration",
+    "Teachers",
+    "Good Outcomes",
+    "Community",
+    "Facilities",
     "Communication",
-    "Leadership / Administration",
-    "Student Growth / Development",
-    "Extracurriculars / Activities",
-    "Facilities / Resources",
+    "Extra-curriculars/ Sports",
 ]
 
 # Build category slide mapping: slides 28-36
@@ -145,7 +145,15 @@ def _replace_image(slide, image_index: int, new_png_path: str):
     old = images[image_index]
     left, top, width, height = old.left, old.top, old.width, old.height
 
-    # Remove old image element from the slide's shape tree
+    # Drop the image relationship before removing the element to avoid
+    # orphaned parts that bloat the output and trigger repair warnings.
+    from pptx.oxml.ns import qn
+    blip = old._element.find('.//' + qn('a:blip'))
+    if blip is not None:
+        rId = blip.get(qn('r:embed'))
+        if rId:
+            slide.part.drop_rel(rId)
+
     sp_tree = slide.shapes._spTree
     sp_tree.remove(old._element)
 
@@ -277,9 +285,7 @@ def _generate_chart(
                 return generate_category_yoy_chart(years_tag_counts, category, tmp_dir)
             return None
 
-        elif func_name in ("overview_stacked_bar", "overview_results_chart"):
-            # These are satisfaction summary / overview charts
-            # Use existing satisfaction summary chart for the overview slides
+        elif func_name == "overview_results_chart":
             from app.core.charts import generate_satisfaction_summary_chart
             return generate_satisfaction_summary_chart(df, year, tmp_dir)
 
@@ -379,9 +385,9 @@ def _update_slide_text(
                 if total_respondents > 0
                 else 0
             )
-            # Try to update count annotations in the slide
-            _update_text_by_match(slide, "183", str(total_gc))
-            _update_text_by_match(slide, "10%", f"{only_pct}%")
+            # "183" is rendered inside the chart image (already replaced).
+            # Match the text pattern "10% ONLY" on the slide.
+            _update_text_by_match(slide, "10% ONLY", f"{only_pct}% ONLY")
 
     # Slides 28-36: tag category response frequency
     elif 28 <= slide_num <= 36:
@@ -396,17 +402,35 @@ def _update_slide_text(
             )
 
     # Slide 47: summary satisfaction rate percentages
+    # Template text: "Overall Satisfaction Rate:\n87.5%\nGrammar School: 93.3%\n..."
+    # We find the shape containing "Overall Satisfaction Rate:" and replace
+    # all percentage patterns with freshly computed values.
     elif slide_num == 47:
         overall_avg = compute_overall_average(df)
-        # Convert 1-4 score to percentage of max
-        satisfaction_pct = round((overall_avg / 4) * 100, 1)
-        _update_text_by_match(
-            slide, "Satisfaction Rate", f"Satisfaction Rate: {satisfaction_pct}%"
-        )
+        overall_pct = round((overall_avg / 4) * 100, 1)
+        level_pcts = {}
         for level in LEVELS:
             avg = compute_level_average(df, level)
-            pct = round((avg / 4) * 100, 1)
-            _update_text_by_match(slide, f"{level} Rate", f"{level} Rate: {pct}%")
+            level_pcts[level] = round((avg / 4) * 100, 1)
+
+        for shape in slide.shapes:
+            if not shape.has_text_frame:
+                continue
+            full = shape.text_frame.text
+            if "Overall Satisfaction Rate" not in full:
+                continue
+            # Replace percentages in order: overall first, then per-level
+            pct_values = [overall_pct] + [level_pcts[lv] for lv in LEVELS]
+            pct_iter = iter(pct_values)
+            for paragraph in shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    def _replace_pct(m):
+                        try:
+                            return f"{next(pct_iter)}%"
+                        except StopIteration:
+                            return m.group(0)
+                    run.text = re.sub(r"\d+\.\d+%", _replace_pct, run.text)
+            break
 
 
 # ---------------------------------------------------------------------------
@@ -488,10 +512,11 @@ def generate_deck(
                 tag_data, free_responses,
             )
 
-    # Save output
-    output_path = output_dir / f"presentation_{year}.pptx"
-    prs.save(str(output_path))
-    logger.info("Deck saved to %s", output_path)
+        # Save inside the tempdir context so temp PNGs are still available
+        output_path = output_dir / f"presentation_{year}.pptx"
+        prs.save(str(output_path))
+        logger.info("Deck saved to %s", output_path)
+
     return output_path
 
 
@@ -530,6 +555,8 @@ async def generate_deck_from_pipeline(
     years_data: dict[str, pl.DataFrame] = {}
     for y in years:
         pipeline = await pipeline_manager.ensure_loaded(y)
+        if pipeline.data is None:
+            raise ValueError(f"No data loaded for year {y}")
         years_data[y] = pipeline.data
 
     df = years_data[year]
@@ -565,13 +592,15 @@ async def generate_deck_from_pipeline(
                 better_serve_tags[tag] = better_serve_tags.get(tag, 0) + 1
 
     # Build per-year category counts for category YoY charts
+    tagging_cache: dict[str, list] = {year: tagging_results}
     years_category_counts: dict[str, dict[str, int]] = {}
     for y in years:
-        y_results = await pb_client.get_full_list(
-            "tagging_results", filter_str=f'year = "{y}"'
-        )
+        if y not in tagging_cache:
+            tagging_cache[y] = await pb_client.get_full_list(
+                "tagging_results", filter_str=f'year = "{y}"'
+            )
         cat_counts: dict[str, int] = {}
-        for tr in y_results:
+        for tr in tagging_cache[y]:
             for tag in tr.get("llm_tags", []):
                 cat_counts[tag] = cat_counts.get(tag, 0) + 1
         years_category_counts[y] = cat_counts

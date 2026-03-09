@@ -293,7 +293,7 @@ def generate_charts(
 def generate_deck(
     year: str = typer.Argument(..., help="Survey year (e.g., 2026)"),
     template: Path = typer.Option(
-        Path("data/templates/presentation.pptx"),
+        Path(__file__).resolve().parent.parent.parent / "data" / "templates" / "presentation.pptx",
         "--template",
         "-t",
         help="Path to template PPTX",
