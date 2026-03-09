@@ -32,6 +32,9 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
 
+    # Document processing
+    "python-pptx",
+
     # Utilities
     "python-dotenv",
     "httpx",

@@ -1,0 +1,131 @@
+{
+    // devcontainer json reference: https://containers.dev/implementors/json_reference/
+    // universal image here: https://github.com/devcontainers/images/tree/main/src/universal/.devcontainer
+    // github codespaces don't charge for storage for image assets based on the universal image
+    "secrets": {
+        "SSH_PRIVATE_KEY": {
+            "description": "Your private SSH key for remote SSH including with Blink Shell"
+        },
+        "SSH_KEY_GITHUB": {
+            "description": "Github secret so can commit dotfiles easily"
+        },
+        "ANTHROPIC_API_KEY": {
+            "description": "Anthropic API key"
+        },
+        "OPENAI_API_KEY": {
+            "description": "OpenAI API key"
+        },
+        "CLAUDE_OAUTH_TOKEN": {
+            "description": "Setup Claude more quickly after container rebuild"
+        },
+        "CLAUDE_REFRESH_TOKEN": {
+            "description": "Setup Claude more quickly after container rebuild"
+        }
+    },
+    "dockerComposeFile": ["docker-compose.dev.yml"],
+    "service": "devcontainer",
+    "workspaceFolder": "/workspaces/gvca_sac",
+    // features repo which has help and options for each feature: https://github.com/devcontainers/features
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/git-lfs:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/duduribeiro/devcontainer-features/neovim:1": {
+            "version": "stable"
+        },
+        "ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
+    },
+    "forwardPorts": [
+        5173,
+        8000,
+        8090
+    ],
+    "portsAttributes": {
+        "5173": {
+            "label": "Frontend (Vite)",
+            "onAutoForward": "notify"
+        },
+        "8000": {
+            "label": "Backend (FastAPI)",
+            "onAutoForward": "notify"
+        },
+        "8090": {
+            "label": "PocketBase",
+            "onAutoForward": "notify"
+        }
+    },
+    "remoteEnv": {
+        "SSH_KEY_GITHUB": "${localEnv:SSH_KEY_GITHUB}",
+        "SSH_PRIVATE_KEY": "${localEnv:SSH_PRIVATE_KEY}",
+        "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+        "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+        "CLAUDE_OAUTH_TOKEN": "${localEnv:CLAUDE_OAUTH_TOKEN}",
+        "CLAUDE_REFRESH_TOKEN": "${localEnv:CLAUDE_REFRESH_TOKEN}",
+        "POCKETBASE_URL": "http://localhost:8090",
+        "VITE_POCKETBASE_URL": "http://localhost:8090"
+    },
+    "onCreateCommand": "chmod +x ./.devcontainer/standard/on_create_hook.sh && bash ./.devcontainer/standard/on_create_hook.sh",
+    "updateContentCommand": "chmod +x ./.devcontainer/standard/project_setup.sh && bash ./.devcontainer/standard/project_setup.sh",
+    "postCreateCommand": "chmod +x ./.devcontainer/standard/post_create_hook.sh && bash ./.devcontainer/standard/post_create_hook.sh",
+    "postStartCommand": "chmod +x ./.devcontainer/standard/post_start_hook.sh && bash ./.devcontainer/standard/post_start_hook.sh",
+    "customizations": {
+        "codespaces": {
+            "repositories": {
+                "broander/dotfiles": {
+                    "permissions": "write-all"
+                },
+                "broander/standard-dev-container": {
+                    "permissions": "write-all"
+                }
+            }
+        },
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+                "editor.formatOnSave": true,
+                "files.insertFinalNewline": true,
+                "files.trimFinalNewlines": true,
+                "editor.rulers": [80],
+                "python.testing.pytestEnabled": true,
+                "[python]": {
+                    "editor.tabSize": 4,
+                    "editor.formatOnType": true,
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                },
+                "[typescript]": {
+                    "editor.tabSize": 2
+                },
+                "[typescriptreact]": {
+                    "editor.tabSize": 2
+                },
+                "[html]": {
+                    "editor.tabSize": 2
+                },
+                "remote.extensionKind": { "asvetliakov.vscode-neovim": ["workspace"] },
+                "vscode-neovim.neovimExecutablePaths.linux": "/usr/local/bin/nvim"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "charliermarsh.ruff",
+                "ms-python.black-formatter",
+                "ms-python.debugpy",
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "bradlc.vscode-tailwindcss",
+                "GitHub.vscode-pull-request-github",
+                "donjayamanne.git-extension-pack",
+                "donjayamanne.githistory",
+                "redhat.vscode-yaml",
+                "timonwong.shellcheck",
+                "asvetliakov.vscode-neovim"
+            ]
+        }
+    }
+}

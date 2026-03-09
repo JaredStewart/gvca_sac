@@ -5,6 +5,12 @@ processed/
 pocketbase/pb_data/
 data/embeddings/
 
+# Local data imports (not for repo)
+local data files/
+
+# Claude Code
+.claude/
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -49,3 +55,7 @@ frontend/build/
 .coverage
 htmlcov/
 coverage/
+
+# Docker cert files (for corporate proxies)
+.docker/
+docker-compose.override.yml

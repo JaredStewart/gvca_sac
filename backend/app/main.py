@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -24,6 +25,7 @@ from app.routers import (
     clustering,
     config_api,
     data,
+    deck,
     jobs,
     pipeline,
     tagging,
@@ -56,9 +58,12 @@ app = FastAPI(
 )
 
 # CORS middleware for frontend access
+_cors_origins = get_settings().cors_origins.split(",")
+if os.environ.get("CODESPACES") == "true":
+    _cors_origins.append("*")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,6 +81,7 @@ app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
 app.include_router(config_api.router, prefix="/api/config", tags=["Config"])
 app.include_router(charts.router, prefix="/api/charts", tags=["Charts"])
 app.include_router(batch_jobs.router, prefix="/api/batch-jobs", tags=["Batch Jobs"])
+app.include_router(deck.router, prefix="/api/deck", tags=["Deck"])
 
 # Mount artifacts directory for static file serving
 settings = get_settings()

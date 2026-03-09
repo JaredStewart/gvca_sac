@@ -2,6 +2,13 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
+# Optionally inject corporate CA cert for builds behind TLS-intercepting proxies
+RUN --mount=type=secret,id=ca_cert,target=/tmp/ca-cert.pem \
+    if [ -f /tmp/ca-cert.pem ]; then \
+      cp /tmp/ca-cert.pem /usr/local/share/ca-certificates/custom-ca.crt && \
+      update-ca-certificates; \
+    fi
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -10,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 
 # Install uv for fast dependency management
 RUN pip install uv
+
+# Use system TLS certs so uv respects injected CA certs
+ENV UV_NATIVE_TLS=1
 
 # Copy dependency files
 COPY pyproject.toml .
