@@ -25,6 +25,7 @@ from app.routers import (
     clustering,
     config_api,
     data,
+    deck,
     jobs,
     pipeline,
     tagging,
@@ -80,6 +81,7 @@ app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
 app.include_router(config_api.router, prefix="/api/config", tags=["Config"])
 app.include_router(charts.router, prefix="/api/charts", tags=["Charts"])
 app.include_router(batch_jobs.router, prefix="/api/batch-jobs", tags=["Batch Jobs"])
+app.include_router(deck.router, prefix="/api/deck", tags=["Deck"])
 
 # Mount artifacts directory for static file serving
 settings = get_settings()

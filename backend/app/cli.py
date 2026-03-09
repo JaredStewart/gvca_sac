@@ -290,6 +290,61 @@ def generate_charts(
 
 
 @app.command()
+def generate_deck(
+    year: str = typer.Argument(..., help="Survey year (e.g., 2026)"),
+    template: Path = typer.Option(
+        Path("data/templates/presentation.pptx"),
+        "--template",
+        "-t",
+        help="Path to template PPTX",
+    ),
+    years: Optional[str] = typer.Option(
+        None,
+        "--years",
+        help="Comma-separated list of years for YoY charts (default: auto-detect)",
+    ),
+):
+    """Generate a PPTX presentation deck from survey data."""
+    from app.core.deck_generator import generate_deck_from_pipeline
+
+    if not template.exists():
+        console.print(f"[red]Error:[/red] Template not found: {template}")
+        console.print("Place a template PPTX at data/templates/presentation.pptx")
+        raise typer.Exit(1)
+
+    years_list = years.split(",") if years else None
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task(f"Generating deck for year {year}...", total=None)
+
+        try:
+            output_path = run_async(
+                generate_deck_from_pipeline(
+                    year=year,
+                    template_path=template,
+                    years=years_list,
+                )
+            )
+            progress.update(task, completed=True)
+
+            console.print(f"\n[green]Deck generated![/green]")
+            console.print(f"  Output: {output_path}")
+
+        except FileNotFoundError as e:
+            progress.update(task, completed=True)
+            console.print(f"\n[red]Error:[/red] {e}")
+            raise typer.Exit(1)
+        except Exception as e:
+            progress.update(task, completed=True)
+            console.print(f"\n[red]Error:[/red] {e}")
+            raise typer.Exit(1)
+
+
+@app.command()
 def status(
     year: Optional[str] = typer.Argument(None, help="Survey year (optional)"),
 ):
